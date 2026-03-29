@@ -11,22 +11,23 @@ set -euo pipefail
 
 # Set some vars 
 USER_NAME=$(whoami)
+ROOT="root"
 FLATPAK_REMOTE_NAME="flathub"
 FLATPAK_REMOTE_URL="https://flathub.org/repo/flathub.flatpakrepo"
 FLATPAK_REMOTE_USER=$(flatpak remote-list --user | awk '{print $1}' | grep -qx "$FLATPAK_REMOTE_NAME")
 
-
-# Install flathub to the user if needed
-echo "Checking for user remote"
-if [[ "$(id -un)" != "$USER_NAME" ]]; then
+# Check whether user is not "root"
+if [[ "$(id -un)" != "ROOT" ]]; then
   echo "Run this as $USER_NAME" >&2
   exit 1
 fi
 
+# Install flathub remote to the user if needed
+echo "Checking for user remote" >&2
 if [[ $FLATPAK_REMOTE_USER ]]; then
   echo "Adding flathub remote for user" >&2
   flatpak --user remote-add --if-not-exists "$FLATPAK_REMOTE_NAME" "$FLATPAK_REMOTE_URL"
-else echo "User remote already setup"
+else echo "User remote already setup" >&2
 fi
 
 
