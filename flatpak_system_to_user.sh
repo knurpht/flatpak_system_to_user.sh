@@ -16,7 +16,7 @@ FLATPAK_REMOTE_USER=$(flatpak remote-list --user | awk '{print $1}' | grep -qx "
 
 # Check whether user is not "root"
 echo "Checking for permissions" >&2
-if (( $UID < 1 )); then
+if [[ $EUID < 1 ]]; then
   echo "Run this as your user, exiting" >&2
   exit 1
 fi
@@ -29,7 +29,7 @@ else echo "User remote already setup" >&2
 fi
 
 
-# Create lists from both system and user installed flatpaks
+# Create lists from both system and huser installed flatpaks
 echo "Create lists from both system and user installed flatpaks" >&2
 mapfile -t system_fp < <(flatpak --system list --columns=ref | awk 'NF {print $1}')
 mapfile -t user_fp < <(flatpak --user list --columns=ref | awk 'NF {print $1}')

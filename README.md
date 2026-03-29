@@ -34,3 +34,11 @@ Kdenlive        org.kde.kdenlive        25.12.2 stable
 knurpht@Lenovo-P16:~/bin> 
 ```
 
+### Instructions
+### 
+```
+git clone git@github.com:knurpht/flatpak_system_to_user.sh.git
+cd flatpak_system_to_user.sh
+chmod +x flatpak_system_to_user.sh
+./flatpak_system_to_user.sh
+```
