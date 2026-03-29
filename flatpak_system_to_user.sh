@@ -49,11 +49,14 @@ echo "Migrating flatpaks to user install: $ref" >&2
     echo "Already in user install: $ref" >&2
     echo "Uninstall flatpak from system: $ref" >&2
     sudo flatpak uninstall -y --system  --force-remove --noninteractive "$ref"
+    echo "Uninstalled from system: $ref" >&2
   else 
     echo "- Installing flatpak to user: $ref" >&2
     flatpak install -y --user --noninteractive flathub "$ref"    
+    echo "- Installed to user: $ref" >&2
     echo "Uninstall flatpak from system: $ref" >&2
     sudo flatpak uninstall -y --system --force-remove --noninteractive "$ref"
+    echo "Uninstalled from system: $ref" >&2
   continue
   fi
 
