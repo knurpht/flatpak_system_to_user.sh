@@ -7,23 +7,21 @@
 # - create the file in some folder, do `chmod +x flatpak_system_to_user.sh
 # - run ./flatpak_system_to_user.sh as your user from that folder. 
 
-set -euo pipefail
+# set -euo pipefail
 
 # Set some vars 
-USER_NAME=$(whoami)
-ROOT="root"
 FLATPAK_REMOTE_NAME="flathub"
 FLATPAK_REMOTE_URL="https://flathub.org/repo/flathub.flatpakrepo"
 FLATPAK_REMOTE_USER=$(flatpak remote-list --user | awk '{print $1}' | grep -qx "$FLATPAK_REMOTE_NAME")
 
 # Check whether user is not "root"
-if [[ "$(id -un)" != "ROOT" ]]; then
-  echo "Run this as $USER_NAME" >&2
+echo "Checking for permissions" >&2
+if (( $UID < 1 )); then
+  echo "Run this as your user, exiting" >&2
   exit 1
 fi
 
 # Install flathub remote to the user if needed
-echo "Checking for user remote" >&2
 if [[ $FLATPAK_REMOTE_USER ]]; then
   echo "Adding flathub remote for user" >&2
   flatpak --user remote-add --if-not-exists "$FLATPAK_REMOTE_NAME" "$FLATPAK_REMOTE_URL"
