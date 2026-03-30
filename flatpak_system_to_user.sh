@@ -28,7 +28,10 @@ fi
 if [[ ! $FLATPAK_REMOTE_USER ]]; then
   echo "User flathub remote not installed" >&2
   echo "Adding flathub remote for user" >&2
-  flatpak --user remote-add --if-not-exists "$FLATPAK_REMOTE_NAME" "$FLATPAK_REMOTE_URL" >/dev/null 2>&1
+  flatpak --user remote-add --if-not-exists "$FLATPAK_REMOTE_NAME" "$FLATPAK_REMOTE_URL"
+  sleep 5
+  flatpak --user remote-modify --enable "$FLATPAK_REMOTE_NAME" >/dev/null 2>&1
+  echo "User flathub remote now enabled" >&2  
 else 
   echo "User flathub remote already installed" >&2
   echo "Checking user flathub remote status" >&2 
@@ -57,32 +60,43 @@ for ref in "${system_fp[@]}"; do
   system_set["$ref"]=1
   ((FLATPAK_SYSTEM_COUNT++))
 done
-echo "Totals: System: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+
+OLD=$FLATPAK_SYSTEM_COUNT
+FP=""
+if [[ $OLD == 1 ]]; then
+  FP="flatpak"
+else
+  FP="flatpaks"
+fi
 
 # For each system flatpak, install in user if missing, then remove from system
-
-for ref in "${system_fp[@]}"; do
-echo "Migrating flatpaks to user install: $ref" >&2
-echo "Totals: System: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
-  if [[ -n "${user_set[$ref]+x}" ]]; then 
-    echo "Already in user install: $ref" >&2
-    echo "Uninstall flatpak from system: $ref" >&2
-    sudo flatpak uninstall -y --system  --force-remove --noninteractive "$ref" >/dev/null 2>&1
-    echo "Uninstalled from system: $ref" >&2
-    ((FLATPAK_SYSTEM_COUNT--))
-    echo "Totals: System: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
-  else 
-    echo "- Installing flatpak to user: $ref" >&2
-    flatpak install -y --user --noninteractive flathub "$ref" >/dev/null 2>&1    
-    echo "- Installed to user: $ref" >&2
-    ((FLATPAK_USER_COUNT++))
-    echo "Totals: System: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
-    echo "Uninstalling flatpak from system: $ref" >&2
-    sudo flatpak uninstall -y --system --force-remove --noninteractive "$ref" >/dev/null 2>&1
-    echo "Uninstalled from system: $ref" >&2
-    ((FLATPAK_SYSTEM_COUNT--))
-    echo "Totals: System: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
-  continue
-  fi
-done
-echo "Migration of flatpaks to user flathub remote finished"
+echo "Totals: To do: $OLD >> User: $FLATPAK_USER_COUNT" >&2
+if [[ ! $OLD == 0 ]]; then
+  for ref in "${system_fp[@]}"; do
+    echo "Migrating $FLATPAK_SYSTEM_COUNT flatpaks to user install: $ref" >&2
+    if [[ -n "${user_set[$ref]+x}" ]]; then 
+      echo "- Already in user install: $ref" >&2
+      echo "- Uninstalling flatpak from system: $ref" >&2
+      sudo flatpak uninstall -y --system  --force-remove --noninteractive "$ref" >/dev/null 2>&1
+      echo "- Uninstalled from system: $ref" >&2
+      ((FLATPAK_SYSTEM_COUNT--))
+      echo "Totals: To do: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+    else 
+      echo "- Installing flatpak to user: $ref" >&2
+      flatpak install -y --user --noninteractive flathub "$ref" >/dev/null 2>&1    
+      echo "- Installed to user: $ref" >&2
+      ((FLATPAK_USER_COUNT++))
+      echo "- Totals: To do: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+      echo "- Uninstalling flatpak from system: $ref" >&2
+      sudo flatpak uninstall -y --system --force-remove --noninteractive "$ref" >/dev/null 2>&1
+      echo "- Uninstalled from system: $ref" >&2
+      ((FLATPAK_SYSTEM_COUNT--))
+      echo "- Totals: To do: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+    continue
+    fi
+  done
+  echo "Migration of $OLD $FP to user flathub remote completed" >&2
+else 
+  echo "Migration of $FLATPAK_SYSTEM_COUNT $FP to user is useless, exiting" >&2
+  exit 1
+fi
