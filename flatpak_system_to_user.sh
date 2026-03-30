@@ -93,6 +93,7 @@ done
 echo "- List for user's flatpak remote done" >&2
 # Create system installed flatpak counter
 OLD=$FLATPAK_SYSTEM_COUNT
+TODO=0
 FP=""
 if [[ $OLD == 1 ]]; then
   FP="flatpak"
@@ -112,32 +113,33 @@ fi
 echo "Totals: System: $OLD >> User: $FLATPAK_USER_COUNT" >&2
 if [[ ! $OLD == 0 ]]; then
   for ref in "${system_fp[@]}"; do
-    echo "Migrating to user install: #$FLATPAK_SYSTEM_COUNT - $ref" >&2
+    TODO=$(($OLD - $FLATPAK_SYSTEM_COUNT +1))
+    echo "Migrating $TODO of $OLD flatpaks from system to user install: $ref" >&2
     if [[ -n "${user_set[$ref]+x}" ]]; then 
       echo "- Already in user install: $ref" >&2
       echo "- Uninstalling flatpak from system: $ref" >&2
       sudo flatpak uninstall -y --system  --force-remove --noninteractive "$ref" >/dev/null 2>&1
       echo "- Uninstalled from system: $ref" >&2
       ((FLATPAK_SYSTEM_COUNT--))
-      echo "- To do: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+      echo "- Done: $TODO of $OLD | To do: $FLATPAK_SYSTEM_COUNT of $OLD  | User: $FLATPAK_USER_COUNT" >&2
     else 
       echo "- Installing flatpak to user: $ref" >&2
       flatpak install -y --user --noninteractive flathub "$ref" >/dev/null 2>&1    
       echo "- Installed to user: $ref" >&2
       ((FLATPAK_USER_COUNT++))
-      echo "- To do: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+      echo "- Done: $TODO of $OLD | To do: $FLATPAK_SYSTEM_COUNT of $OLD  | User: $FLATPAK_USER_COUNT" >&2
       echo "- Uninstalling flatpak from system: $ref" >&2
       sudo flatpak uninstall -y --system --force-remove --noninteractive "$ref" >/dev/null 2>&1
       echo "- Uninstalled from system: $ref" >&2
       ((FLATPAK_SYSTEM_COUNT--))
-      echo "- To do: $FLATPAK_SYSTEM_COUNT | User: $FLATPAK_USER_COUNT" >&2
+      echo "- Done: $TODO of $OLD | To do: $FLATPAK_SYSTEM_COUNT of $OLD  | User: $FLATPAK_USER_COUNT" >&2
     continue
     fi
   done
-  echo "Migration of $OLD $FP to user's flathub remote completed" >&2
+  echo -e "\nMigration of $OLD $FP to user's flathub remote completed" >&2
 else 
-  echo "Migration of $FLATPAK_SYSTEM_COUNT $FP to user is useless, exiting" >&2
-  exit 1
+  echo -e "\nMigration of $TODO $FP to user is useless, exiting" >&2
 fi
 #}
 
+echo -e "\n         --- THE END ---"
