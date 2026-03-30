@@ -1,4 +1,4 @@
-  #!/usr/bin/env bash
+#!/usr/bin/env bash
 
 # Name      : flatpak_system_to_user.sh
 # Purpose   : Migrating system flatpaks from system to user
