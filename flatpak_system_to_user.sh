@@ -7,25 +7,10 @@
 # - create the file in some folder, do `chmod +x flatpak_system_to_user.sh
 # - run ./flatpak_system_to_user.sh as your user from that folder. 
 
-
-#
-# Set some vars 
-#
-# function set_vars() {
-FLATPAK_REMOTE_NAME="flathub"
-FLATPAK_REMOTE_URL="https://flathub.org/repo/flathub.flatpakrepo"
-FLATPAK_REMOTE_DISABLED="disabled"
-FLATPAK_REMOTE_USER=$(flatpak --user remote-list --show-disabled| awk '{print $1}')
-FLATPAK_REMOTE_USER_DISABLED=$(flatpak --user remote-list --show-disabled | awk '{print $2}')
-FLATPAK_SYSTEM_COUNT=0
-FLATPAK_USER_COUNT=0
-# return 
-# }
-
 #
 # Check whether user is not "root"
 #
-# function check_root() {
+check_root() {
 echo "Checking for user or root" >&2
 if [[ ! $EUID > 0 ]]; then
   echo "Run this as your user, exiting" >&2
@@ -33,15 +18,25 @@ if [[ ! $EUID > 0 ]]; then
 else 
   echo "All well, you are not root" >&2
 fi
-# return 
-# }
+}
 
-
+#
+# Set some vars 
+#
+set_vars() {
+FLATPAK_REMOTE_NAME="flathub"
+FLATPAK_REMOTE_URL="https://flathub.org/repo/flathub.flatpakrepo"
+FLATPAK_REMOTE_DISABLED="disabled"
+FLATPAK_REMOTE_USER=$(flatpak --user remote-list --show-disabled| awk '{print $1}')
+FLATPAK_REMOTE_USER_DISABLED=$(flatpak --user remote-list --show-disabled | awk '{print $2}')
+FLATPAK_SYSTEM_COUNT=0
+FLATPAK_USER_COUNT=0
+}
 
 #
 # Install flathub remote to the user if needed
 #
-# function setup_remote() {
+setup_remote() {
 echo "Checking for user's flathub remote" >&2
 if [[ ! $FLATPAK_REMOTE_USER ]]; then
   echo "- User's flathub remote not installed" >&2
@@ -65,15 +60,12 @@ else
   fi
   echo "- User's flatpak remote setup complete !" >&2
 fi
-# return 
-# }
-
-
+}
 
 #
 # Create lists from both system and user installed flatpaks
 #
-# function get_refs() {
+migrate() {
 echo "Creating lists from system and user installed flatpaks" >&2
 mapfile -t system_fp < <(flatpak --system list --columns=ref | awk 'NF {print $1}')
 mapfile -t user_fp < <(flatpak --user list --columns=ref | awk 'NF {print $1}')
@@ -100,16 +92,14 @@ if [[ $OLD == 1 ]]; then
 else
   FP="flatpaks"
 fi
-# return 
-# }
-
-
-
+# fp_move system_fp userset
+fp_move
+}
 
 #
-# For each system flatpak, install in user if missing, then remove from system
+# For each system flatpak, install in user if missing, then remove feerom system
 #
-# function migrate() {
+fp_move() {
 echo "Totals: System: $OLD >> User: $FLATPAK_USER_COUNT" >&2
 if [[ ! $OLD == 0 ]]; then
   for ref in "${system_fp[@]}"; do
@@ -140,6 +130,14 @@ if [[ ! $OLD == 0 ]]; then
 else 
   echo -e "\nMigration of $TODO $FP to user is useless, exiting" >&2
 fi
-#}
+}
 
 echo -e "\n         --- THE END ---"
+
+#
+# run the functions
+# 
+check_root
+set_vars
+setup_remote
+migrate
