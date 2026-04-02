@@ -92,7 +92,6 @@ if [[ $OLD == 1 ]]; then
 else
   FP="flatpaks"
 fi
-# fp_move system_fp userset
 fp_move
 }
 
