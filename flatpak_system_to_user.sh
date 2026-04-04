@@ -10,7 +10,7 @@
 #
 # Check whether user is not "root"
 #
-check_root() {
+check_is_user() {
 echo "Checking for user or root" >&2
 if [[ ! $EUID > 0 ]]; then
   echo "Run this as your user, exiting" >&2
@@ -36,7 +36,7 @@ FLATPAK_USER_COUNT=0
 #
 # Install flathub remote to the user if needed
 #
-setup_remote() {
+set_user_remote() {
 echo "Checking for user's flathub remote" >&2
 if [[ ! $FLATPAK_REMOTE_USER ]]; then
   echo "- User's flathub remote not installed" >&2
@@ -136,7 +136,7 @@ echo -e "\n         --- THE END ---"
 #
 # run the functions
 # 
-check_root
+check_is_user
 set_vars
-setup_remote
+set_user_remote
 migrate
